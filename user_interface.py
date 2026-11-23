@@ -55,7 +55,7 @@
             return None
         return best_length, self.date_of_day(best_start)
 
-    # --- 2G. Days not recorded yet (requirement 9) ---------------------
+    # --- 2G. Days not recorded yet (requirement 9) --------------------
 
     def last_recorded_date(self):
         return self.date_of_day(self.days_recorded() - 1)
