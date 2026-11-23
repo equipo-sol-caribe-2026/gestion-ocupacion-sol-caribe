@@ -166,3 +166,64 @@ def validate_min_max(minimum, maximum):
     if minimum > maximum:
         return "El mínimo no puede ser mayor que el máximo."
     return None
+
+# PART 6 - Load from files (requirements 12 and 13)
+# =====================================================================
+# Both loaders let FileNotFoundError go up so the interface can report it.
+# They return (loaded_count, discarded) where discarded is a list of
+# (line_number, cause).
+
+def can_load_from_files():
+    """Loading is only allowed when the program has no hotels yet."""
+    return len(hotels) == 0
+
+
+def read_data_lines(path):
+    """Return [(line_number, line)] without the header (line 1) and
+    without the blank lines. Line numbers are the real ones in the file."""
+    with open(path, encoding="utf-8") as file:
+        lines = file.read().splitlines()
+    return [(number, line)
+            for number, line in enumerate(lines, start=1)
+            if number > 1 and line.strip() != ""]
+
+
+def split_fields(line):
+    return [field.strip() for field in line.split(";")]
+
+
+def load_hotels_from_file(path):
+    loaded = 0
+    discarded = []
+    for number, line in read_data_lines(path):
+        fields = split_fields(line)
+        if len(fields) != 5:
+            discarded.append((number, "La línea no tiene cinco campos."))
+            continue
+        error = create_hotel(*fields)
+        if error is not None:
+            discarded.append((number, error))
+        else:
+            loaded += 1
+    return loaded, discarded
+
+
+def load_occupancy_from_file(path):
+    loaded = 0
+    discarded = []
+    for number, line in read_data_lines(path):
+        fields = split_fields(line)
+        if len(fields) != 2:
+            discarded.append((number, "La línea no tiene dos campos."))
+            continue
+        hotel = find_hotel(fields[0])
+        if hotel is None:
+            discarded.append((number, "No hay un hotel con ese nombre."))
+            continue
+        rooms, error = parse_occupied_rooms(fields[1], hotel)
+        if error is not None:
+            discarded.append((number, error))
+            continue
+        hotel.add_day(rooms)
+        loaded += 1
+    return loaded, discarded
