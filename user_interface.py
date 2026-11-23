@@ -93,6 +93,21 @@ def hotel_with_lowest_percentage():
     return best
 
 # =====================================================================
+# PART 6 - Option 5: highest and lowest percentage (requirement 11)
+# =====================================================================
+
+def option_extremes():
+    highest = bl.hotel_with_highest_percentage()
+    if highest is None:
+        print("Ningún hotel tiene días registrados.")
+        return
+    lowest = bl.hotel_with_lowest_percentage()
+    print(f"Mayor porcentaje de ocupación: {highest.name}, "
+          f"{round(highest.percentage(), 2)} %")
+    print(f"Menor porcentaje de ocupación: {lowest.name}, "
+          f"{round(lowest.percentage(), 2)} %")
+
+# =====================================================================
 # PART 7 - Option 6: load from files (requirements 12 and 13)
 # =====================================================================
 
