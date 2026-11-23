@@ -1,0 +1,8 @@
+hotel; ocupadas
+Sol Caribe Cartagena; 15
+Sol Caribe Cartagena; 18
+Sol Caribe Cartagena; 45
+Sol Caribe Cartagena; 15
+Sol Caribe Santa Marta; 30
+Hotel Inexistente; 10
+Sol Caribe Cartagena; 55
