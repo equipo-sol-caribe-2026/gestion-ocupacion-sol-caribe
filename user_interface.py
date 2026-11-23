@@ -1,3 +1,5 @@
+import business_logic as bl
+import datetime
 # =====================================================================
 # PART 1 - Shared helpers
 # =====================================================================
@@ -69,9 +71,6 @@ def main():
         else:
             action()
 
-
-if __name__ == "__main__":
-    main()
 
 # PART 3 - Option 2: register the next day (requirement 2)
 # =====================================================================
@@ -174,7 +173,7 @@ def option_report():
 
     # Requirement 9: days not recorded yet
     print(f"Último día registrado: {hotel.last_recorded_date().isoformat()}")
-    missing = hotel.missing_days(date.today())
+    missing = hotel.missing_days(bl.date.today())
     if missing == 0:
         print("El registro está al día.")
     else:
@@ -195,3 +194,39 @@ def option_extremes():
           f"{round(highest.percentage(), 2)} %")
     print(f"Menor porcentaje de ocupación: {lowest.name}, "
           f"{round(lowest.percentage(), 2)} %")
+# =====================================================================
+# PART 7 - Option 6: load from files (requirements 12 and 13)
+# =====================================================================
+
+def ask_for_path(message):
+    # Strip spaces and the quotes Windows adds when copying a path
+    return input(message).strip().strip('"')
+
+
+def option_load_files():
+    if not bl.can_load_from_files():
+        print("La carga solo se hace con el programa sin hoteles.")
+        return
+
+    hotels_path = ask_for_path("Ruta del archivo de hoteles: ")
+    try:
+        loaded, discarded = bl.load_hotels_from_file(hotels_path)
+    except FileNotFoundError:
+        print("El archivo no existe.")
+        return
+    show_discarded(discarded)
+    print(f"Se cargaron {loaded} hoteles.")
+
+    occupancy_path = ask_for_path("Ruta del archivo de ocupación: ")
+    try:
+        loaded, discarded = bl.load_occupancy_from_file(occupancy_path)
+    except FileNotFoundError:
+        print("El archivo no existe.")
+        return
+    show_discarded(discarded)
+    print(f"Se cargaron {loaded} días.")
+
+
+if __name__ == "__main__":
+    main()
+
