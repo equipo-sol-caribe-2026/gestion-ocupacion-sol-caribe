@@ -91,3 +91,36 @@ def hotel_with_lowest_percentage():
         if best is None or hotel.percentage() < best.percentage():
             best = hotel
     return best
+
+# =====================================================================
+# PART 7 - Option 6: load from files (requirements 12 and 13)
+# =====================================================================
+
+def ask_for_path(message):
+    # Strip spaces and the quotes Windows adds when copying a path
+    return input(message).strip().strip('"')
+
+
+def option_load_files():
+    if not bl.can_load_from_files():
+        print("La carga solo se hace con el programa sin hoteles.")
+        return
+
+    hotels_path = ask_for_path("Ruta del archivo de hoteles: ")
+    try:
+        loaded, discarded = bl.load_hotels_from_file(hotels_path)
+    except FileNotFoundError:
+        print("El archivo no existe.")
+        return
+    show_discarded(discarded)
+    print(f"Se cargaron {loaded} hoteles.")
+
+    occupancy_path = ask_for_path("Ruta del archivo de ocupación: ")
+    try:
+        loaded, discarded = bl.load_occupancy_from_file(occupancy_path)
+    except FileNotFoundError:
+        print("El archivo no existe.")
+        return
+    show_discarded(discarded)
+    print(f"Se cargaron {loaded} días.")
+
