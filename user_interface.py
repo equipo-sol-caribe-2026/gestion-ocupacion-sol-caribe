@@ -1,129 +1,93 @@
-# =====================================================================
-# PART 1 - Shared helpers
-# =====================================================================
-
-def ask_for_hotel():
-    """Read a hotel name. Return the hotel, or None after warning the user."""
-    name = input("Nombre del hotel: ")
-    hotel = bl.find_hotel(name)
-    if hotel is None:
-        print("No hay un hotel con ese nombre.")
-    return hotel
+"""Aporte Integrante 3: Clase Hotel (Parte 2) - Extremos, Niveles, Racha Crítica y Comparativa (Req. 6 al 9 y 11)"""
 
 
-def show_discarded(discarded):
-    for line_number, cause in discarded:
-        print(f"Línea {line_number} descartada: {cause}")
 
+    def highest_day_date(self):
+        index = self.occupied_rooms.index(max(self.occupied_rooms))
+        return self.date_of_day(index)
 
-# =====================================================================
-# PART 2 - Option 1: create a hotel (requirement 1)
-# =====================================================================
+    def lowest_day_date(self):
+        index = self.occupied_rooms.index(min(self.occupied_rooms))
+        return self.date_of_day(index)
 
-def option_create_hotel():
-    name = input("Nombre del hotel: ")
-    rooms_text = input("Habitaciones habilitadas: ")
-    year_text = input("Año de la fecha de inicio: ")
-    month_text = input("Mes de la fecha de inicio: ")
-    day_text = input("Día de la fecha de inicio: ")
-    error = bl.create_hotel(name, rooms_text, year_text, month_text, day_text)
-    if error is not None:
-        print(error)
-    else:
-        print("Hotel creado.")
+    # --- 2E. Occupancy levels (requirement 7) --------------------------
+    # Integer comparisons (rooms * 100 < 40 * enabled) avoid decimal errors.
 
+    def level_of_day(self, index):
+        rooms = self.occupied_rooms[index] * 100
+        if rooms < 40 * self.enabled_rooms:
+            return CRITICAL
+        if rooms < 60 * self.enabled_rooms:
+            return LOW
+        if rooms < 80 * self.enabled_rooms:
+            return MEDIUM
+        return HIGH
 
-# =====================================================================
-# PART 8 - Menu and program start (requirement 14)
-# =====================================================================
+    def count_levels(self):
+        """Return [critical, low, medium, high] day counts."""
+        counts = [0, 0, 0, 0]
+        for index in range(self.days_recorded()):
+            counts[self.level_of_day(index)] += 1
+        return counts
 
-def show_menu():
-    print()
-    print("===== Hoteles Sol Caribe =====")
-    print("1. Crear un hotel")
-    print("2. Registrar las habitaciones ocupadas del día siguiente")
-    print("3. Simular días")
-    print("4. Ver el informe de un hotel")
-    print("5. Ver el hotel con mayor y menor porcentaje de ocupación")
-    print("6. Cargar los hoteles y la ocupación desde archivos")
-    print("7. Salir")
+    # --- 2F. Longest critical streak (requirement 8) -------------------
 
+    def longest_critical_streak(self):
+        """Return (length, start_date) of the longest critical streak,
+        or None if the hotel never had a critical day.
+        A strictly greater length is needed to replace the best streak,
+        so on a tie the one that started first is kept."""
+        best_length = 0
+        best_start = 0
+        current_length = 0
+        current_start = 0
+        for index in range(self.days_recorded()):
+            if self.level_of_day(index) == CRITICAL:
+                if current_length == 0:
+                    current_start = index
+                current_length += 1
+                if current_length > best_length:
+                    best_length = current_length
+                    best_start = current_start
+            else:
+                current_length = 0
+        if best_length == 0:
+            return None
+        return best_length, self.date_of_day(best_start)
 
-def main():
-    actions = {
-        "1": option_create_hotel,
-        "2": option_register_day,
-        "3": option_simulate_days,
-        "4": option_report,
-        "5": option_extremes,
-        "6": option_load_files,
-    }
-    while True:
-        show_menu()
-        choice = input("Elija una opción: ").strip()
-        if choice == "7":
-            break
-        action = actions.get(choice)
-        if action is None:
-            print("La opción no es válida.")
-        else:
-            action()
+    # --- 2G. Days not recorded yet (requirement 9) ---------------------
 
+    def last_recorded_date(self):
+        return self.date_of_day(self.days_recorded() - 1)
 
-if __name__ == "__main__":
-    main()
-
-# PART 3 - Option 2: register the next day (requirement 2)
-# =====================================================================
-
-def option_register_day():
-    hotel = ask_for_hotel()
-    if hotel is None:
-        return
-    print(f"Día a registrar: {hotel.next_date().isoformat()}")
-    while True:
-        text = input("Habitaciones ocupadas: ")
-        rooms, error = bl.parse_occupied_rooms(text, hotel)
-        if error is None:
-            break
-        print(error)
-    hotel.add_day(rooms)
-    print("Día registrado.")
-
+    def missing_days(self, today):
+        """Days from the one after the last recorded day up to the day before
+        today. 0 means the record is up to date. today is a parameter so it
+        can be tested with any date."""
+        missing = (today - timedelta(days=1) - self.last_recorded_date()).days
+        return max(missing, 0)
 
 # =====================================================================
-# PART 4 - Option 3: simulate days (requirement 3)
+# PART 5 - Highest and lowest occupancy percentage (requirement 11)
 # =====================================================================
-# Each value is checked right after reading it. If one fails, the message
-# is shown and we go back to the menu without reading the rest.
+# Only hotels with recorded days count. Strict comparisons keep the first
+# hotel created or loaded when there is a tie.
 
-def option_simulate_days():
-    hotel = ask_for_hotel()
-    if hotel is None:
-        return
+def hotel_with_highest_percentage():
+    best = None
+    for hotel in hotels:
+        if hotel.days_recorded() == 0:
+            continue
+        if best is None or hotel.percentage() > best.percentage():
+            best = hotel
+    return best
 
-    days, error = bl.parse_days_count(input("Número de días a simular: "))
-    if error is not None:
-        print(error)
-        return
 
-    minimum, error = bl.parse_occupied_rooms(
-        input("Habitaciones ocupadas mínimas: "), hotel)
-    if error is not None:
-        print(error)
-        return
-
-    maximum, error = bl.parse_occupied_rooms(
-        input("Habitaciones ocupadas máximas: "), hotel)
-    if error is not None:
-        print(error)
-        return
-
-    error = bl.validate_min_max(minimum, maximum)
-    if error is not None:
-        print(error)
-        return
-
-    hotel.simulate(days, minimum, maximum)
-    print(f"Se simularon {days} días.")
-
+def hotel_with_lowest_percentage():
+    best = None
+    for hotel in hotels:
+        if hotel.days_recorded() == 0:
+            continue
+        if best is None or hotel.percentage() < best.percentage():
+            best = hotel
+    return best
