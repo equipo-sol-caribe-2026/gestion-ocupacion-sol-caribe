@@ -260,7 +260,7 @@ def hotel_with_lowest_percentage():
     return best
     
 # PART 6 - Load from files (requirements 12 and 13)
-# =====================================================================
+# ====================================================================
 # Both loaders let FileNotFoundError go up so the interface can report it.
 # They return (loaded_count, discarded) where discarded is a list of
 # (line_number, cause).
